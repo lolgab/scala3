@@ -1,0 +1,47 @@
+-- [E237] Potential Issue Warning: tests/warn/i17162.scala:11:26 -------------------------------------------------------
+11 |      println(s"length = $length") // warn
+   |                          ^^^^^^
+   |                          Reference to length selects method length in class Array,
+   |                          not the extension method length defined in this extension.
+   |                          Write headers.length to select the member explicitly.
+   |                          To call the extension method instead, move its implementation to a private
+   |                          extension method with a different name and call that one.
+   |
+   | longer explanation available when compiling with `-explain`
+-- [E237] Potential Issue Warning: tests/warn/i17162.scala:12:24 -------------------------------------------------------
+12 |    def first: String = apply(0) // warn
+   |                        ^^^^^
+   |                        Reference to apply selects method apply in class Array,
+   |                        not the extension method apply defined in this extension.
+   |                        Write headers.apply to select the member explicitly.
+   |                        To call the extension method instead, move its implementation to a private
+   |                        extension method with a different name and call that one.
+   |
+   | longer explanation available when compiling with `-explain`
+-- [E237] Potential Issue Warning: tests/warn/i17162.scala:13:25 -------------------------------------------------------
+13 |    def sum: Int = own + length // warn
+   |                         ^^^^^^
+   |                         Reference to length selects method length in class Array,
+   |                         not the extension method length defined in this extension.
+   |                         Write headers.length to select the member explicitly.
+   |                         To call the extension method instead, move its implementation to a private
+   |                         extension method with a different name and call that one.
+   |
+   | longer explanation available when compiling with `-explain`
+-- [E237] Potential Issue Warning: tests/warn/i17162.scala:23:17 -------------------------------------------------------
+23 |    def n: Int = m // warn
+   |                 ^
+   |                 Reference to m selects method m in class C,
+   |                 not the extension method m defined in this extension.
+   |                 Write c.m to select the member explicitly.
+   |                 To call the extension method instead, move its implementation to a private
+   |                 extension method with a different name and call that one.
+   |
+   | longer explanation available when compiling with `-explain`
+-- [E194] Potential Issue Warning: tests/warn/i17162.scala:22:8 --------------------------------------------------------
+22 |    def m: Int = 2 // warn
+   |        ^
+   |        Extension method m will never be selected from type C
+   |        because C already has a member with the same name and compatible parameter types.
+   |
+   | longer explanation available when compiling with `-explain`

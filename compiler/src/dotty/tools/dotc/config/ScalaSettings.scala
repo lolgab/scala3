@@ -287,6 +287,7 @@ private sealed trait WarningSettings extends SettingGroup:
       ChoiceWithHelp("all", ""),
       ChoiceWithHelp("private-shadow", "Warn if a private field or class parameter shadows a superclass field"),
       ChoiceWithHelp("type-parameter-shadow", "Warn when a type parameter shadows a type already in the scope"),
+      ChoiceWithHelp("extension-shadow", "Warn when a reference to an extension method inside its collective extension selects a member of the receiver instead"),
     ),
     default = Nil
   )
@@ -301,6 +302,8 @@ private sealed trait WarningSettings extends SettingGroup:
       allOr("private-shadow")
     def typeParameterShadow(using Context) =
       allOr("type-parameter-shadow")
+    def extensionShadow(using Context) =
+      allOr("extension-shadow")
   end WshadowHas
 
   object Whas:

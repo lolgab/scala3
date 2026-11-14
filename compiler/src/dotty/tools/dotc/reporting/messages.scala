@@ -2701,6 +2701,36 @@ class ExtensionNullifiedByMember(method: Symbol, target: Symbol)(using Context)
        |
        |The extension may be invoked as though selected from an arbitrary type if conversions are in play."""
 
+class ExtensionShadowedByMember(name: Name, receiver: Symbol, member: Symbol)(using Context)
+  extends Message(ExtensionShadowedByMemberID):
+  def kind = MessageKind.PotentialIssue
+  def msg(using Context) =
+    i"""Reference to ${hl(name.toString)} selects $member in ${member.owner},
+       |not the extension method ${hl(name.toString)} defined in this extension.
+       |Write ${hl(s"${receiver.name}.$name")} to select the member explicitly.
+       |To call the extension method instead, move its implementation to a private
+       |extension method with a different name and call that one."""
+  def explain(using Context) =
+    val implName = if name.isOperatorName then "impl" else s"${name}Impl"
+    i"""Inside a collective extension, a reference to another extension method ${hl(name.toString)}
+       |of the same extension is expanded to ${hl(s"${receiver.name}.$name")}.
+       |Members of the receiver type take precedence over extension methods in such a selection,
+       |so the reference resolves to $member instead.
+       |This typically happens when the receiver is an opaque type alias whose underlying type
+       |is visible here and has a member with the same name.
+       |
+       |If the member is intended, write ${hl(s"${receiver.name}.$name")} to make that explicit.
+       |
+       |If the extension method is intended, move its implementation to a private extension
+       |method with a name that does not clash with a member, and call that one instead:
+       |
+       |  extension (${receiver.name}: ...)
+       |    private def $implName ... = <implementation of $name>
+       |    def $name ... = $implName
+       |    ... $implName ...
+       |
+       |Alternatively, invoke it as a regular method, e.g. ${hl(s"this.$name(${receiver.name})")}."""
+
 class ExtensionHasDefault(method: Symbol)(using Context)
   extends Message(ExtensionHasDefaultID):
   def kind = MessageKind.PotentialIssue

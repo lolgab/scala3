@@ -751,8 +751,12 @@ class Typer(@constructorOnly nestingLevel: Int = 0) extends Namer
         case _ => NoSymbol
       leadParam(m.rawParamss)
 
-    val localExtensionSelection: untpd.Tree =
-      var select: untpd.Tree = EmptyTree
+    /** The receiver of the enclosing collective extension, if `tree` refers to
+     *  another extension method of that same extension. In that case, `tree` is
+     *  expanded to a selection on that receiver.
+     */
+    val localExtensionReceiver: Symbol =
+      var receiver: Symbol = NoSymbol
       if ctx.mode.is(Mode.InExtensionMethod) then
         rawType match
         case rawType: TermRef
@@ -763,12 +767,21 @@ class Typer(@constructorOnly nestingLevel: Int = 0) extends Namer
                alt.symbol.is(ExtensionMethod)
             && alt.symbol.extensionParam.span == xparam.span // forces alt.symbol (which might be xmethod)
           then
-            select = untpd.cpy.Select(tree)(untpd.ref(xparam), name)
+            receiver = xparam
         case _ =>
-      select
+      receiver
 
-    if !localExtensionSelection.isEmpty then
-      typed(localExtensionSelection, pt)
+    if localExtensionReceiver.exists then
+      val selected = typed(untpd.cpy.Select(tree)(untpd.ref(localExtensionReceiver), name), pt)
+      // A member of the receiver type takes precedence over the extension method,
+      // which is surprising when the member is only visible here, e.g. through an opaque alias.
+      if ctx.settings.WshadowHas.extensionShadow && !selected.tpe.isErroneous then
+        val memberSelection = selected.find:
+          case Select(qual, `name`) => qual.symbol == localExtensionReceiver
+          case _ => false
+        memberSelection.foreach: sel =>
+          report.warning(ExtensionShadowedByMember(name, localExtensionReceiver, sel.symbol), tree.srcPos)
+      selected
     else if rawType.exists then
       val ref = setType(ensureAccessible(rawType, superAccess = false, tree.srcPos))
       withOriginalName(ref, name)
